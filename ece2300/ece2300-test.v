@@ -20,10 +20,10 @@
 `define ECE2300_RESET  "\033[0m"
 
 //========================================================================
-// CombinationalTestUtils
+// TestUtils
 //========================================================================
 
-module CombinationalTestUtils();
+module TestUtils();
 
   logic clk;
   logic rst;
@@ -32,10 +32,6 @@ module CombinationalTestUtils();
   initial clk = 1'b1;
   always #5 clk = ~clk;
   // verilator lint_on BLKSEQ
-
-  // verilator lint_off UNUSEDPARAM
-  localparam outputs_undefined = 1;
-  // verilator lint_on UNUSEDPARAM
 
   // status tracking
 
@@ -51,6 +47,18 @@ module CombinationalTestUtils();
   string vcd_filename;
   int n = 0;
   initial begin
+
+    // Process command line arguments
+
+    if ( $test$plusargs( "help" ) ) begin
+      $display("");
+      $display(" Without any command line options, run all test cases.");
+      $display(" There are two possible command line options:");
+      $display("  +test-case=N         run just test case number N");
+      $display("  +dump-vcd=filename   dump a VCD file with given filename");
+      $display("");
+      $finish;
+    end
 
     if ( !$value$plusargs( "test-case=%d", n ) )
       n = 0;
@@ -84,11 +92,7 @@ module CombinationalTestUtils();
       if ( n != 0 )
         $display( "" );
       $display( `ECE2300_RED, "FAILED", `ECE2300_RESET,
-                " (timeout after %0d cycles)\n", t.cycles );
-
-      $display("num_test_cases_passed = %2d", num_test_cases_passed );
-      $display("num_test_cases_failed = %2d", num_test_cases_failed+1 );
-      $write("\n");
+                " (timeout after %0d cycles)\n", cycles );
 
       $finish;
     end
@@ -115,6 +119,13 @@ module CombinationalTestUtils();
         $write("\n");
       $display("num_test_cases_passed = %2d", num_test_cases_passed );
       $display("num_test_cases_failed = %2d", num_test_cases_failed );
+      $write("\n");
+
+      $display("You can zoom in to see why a specific test case is failing by specifying");
+      $display("that test case number on the command line. For example, if the test bench");
+      $display("named FooBar-test is failing on test case 1 you can zoom in like this:");
+      $write("\n");
+      $display(" %% ./FooBar-test +test-case=1");
       $write("\n");
     end
     else begin
@@ -192,10 +203,6 @@ module TestUtilsClkRst
   always #5 clk = ~clk;
   // verilator lint_on BLKSEQ
 
-  // verilator lint_off UNUSEDPARAM
-  localparam outputs_undefined = 1;
-  // verilator lint_on UNUSEDPARAM
-
   // status tracking
 
   logic failed = 0;
@@ -210,6 +217,18 @@ module TestUtilsClkRst
   string vcd_filename;
   int n = 0;
   initial begin
+
+    // Process command line arguments
+
+    if ( $test$plusargs( "help" ) ) begin
+      $display("");
+      $display(" Without any command line options, run all test cases.");
+      $display(" There are two possible command line options:");
+      $display("  +test-case=N         run just test case number N");
+      $display("  +dump-vcd=filename   dump a VCD file with given filename");
+      $display("");
+      $finish;
+    end
 
     if ( !$value$plusargs( "test-case=%d", n ) )
       n = 0;
@@ -243,11 +262,7 @@ module TestUtilsClkRst
       if ( n != 0 )
         $display( "" );
       $display( `ECE2300_RED, "FAILED", `ECE2300_RESET,
-                " (timeout after %0d cycles)\n", t.cycles );
-
-      $display("num_test_cases_passed = %2d", num_test_cases_passed );
-      $display("num_test_cases_failed = %2d", num_test_cases_failed+1 );
-      $write("\n");
+                " (timeout after %0d cycles)\n", cycles );
 
       $finish;
     end
@@ -277,6 +292,13 @@ module TestUtilsClkRst
         $write("\n");
       $display("num_test_cases_passed = %2d", num_test_cases_passed );
       $display("num_test_cases_failed = %2d", num_test_cases_failed );
+      $write("\n");
+
+      $display("You can zoom in to see why a specific test case is failing by specifying");
+      $display("that test case number on the command line. For example, if the test bench");
+      $display("named FooBar-test is failing on test case 1 you can zoom in like this:");
+      $write("\n");
+      $display(" %% ./FooBar-test +test-case=1");
       $write("\n");
     end
     else begin
@@ -342,22 +364,26 @@ endmodule
 //------------------------------------------------------------------------
 // ECE2300_CHECK_EQ
 //------------------------------------------------------------------------
-// Compare two expressions which can be signals or constants. We use the
-// !== operator so that Xs must also match exactly.
+// Compare two expressions which can be signals or constants. If the
+// reference expression is 'z, then we don't care about the output and we
+// do not do a check. The actual check uses the !== operator so that Xs
+// must also match exactly
 
 `define ECE2300_CHECK_EQ( __dut, __ref )                                \
-  if ( __ref !== __dut ) begin                                          \
-    if ( t.n != 0 ) begin                                               \
-      $display( "" );                                                   \
-      $display( "ERROR: Value on output port %s is incorrect on cycle %0d", \
-                "__dut", t.cycles );                                    \
-      $display( " - actual value   : %b", __dut );                      \
-      $display( " - expected value : %b", __ref );                      \
+  if ( __ref !== 'z ) begin                                             \
+    if ( __ref !== __dut ) begin                                        \
+      if ( t.n != 0 ) begin                                             \
+        $display( "" );                                                 \
+        $display( "ERROR: Value on output port %s is incorrect on cycle %0d", \
+                  "__dut", t.cycles );                                  \
+        $display( " - actual value   : %b", __dut );                    \
+        $display( " - expected value : %b", __ref );                    \
+      end                                                               \
+      t.failed = 1;                                                     \
     end                                                                 \
-    t.failed = 1;                                                       \
-  end                                                                   \
-  else begin                                                            \
-    t.passed = 1;                                                       \
+    else begin                                                          \
+      t.passed = 1;                                                     \
+    end                                                                 \
   end                                                                   \
   if (1)
 
@@ -368,18 +394,20 @@ endmodule
 // !== operator so that Xs must also match exactly. Display using hex.
 
 `define ECE2300_CHECK_EQ_HEX( __dut, __ref )                            \
-  if ( __ref !== __dut ) begin                                          \
-    if ( t.n != 0 ) begin                                               \
-      $display( "" );                                                   \
-      $display( "ERROR: Value on output port %s is incorrect on cycle %0d", \
-                "__dut", t.cycles );                                    \
-      $display( " - actual value   : %h", __dut );                      \
-      $display( " - expected value : %h", __ref );                      \
+  if ( __ref !== 'z ) begin                                             \
+    if ( __ref !== __dut ) begin                                        \
+      if ( t.n != 0 ) begin                                             \
+        $display( "" );                                                 \
+        $display( "ERROR: Value on output port %s is incorrect on cycle %0d", \
+                  "__dut", t.cycles );                                  \
+        $display( " - actual value   : %h", __dut );                    \
+        $display( " - expected value : %h", __ref );                    \
+      end                                                               \
+      t.failed = 1;                                                     \
     end                                                                 \
-    t.failed = 1;                                                       \
-  end                                                                   \
-  else begin                                                            \
-    t.passed = 1;                                                       \
+    else begin                                                          \
+      t.passed = 1;                                                     \
+    end                                                                 \
   end                                                                   \
   if (1)
 
@@ -387,21 +415,23 @@ endmodule
 // ECE2300_CHECK_EQ_STR
 //------------------------------------------------------------------------
 // Compare two expressions which can be signals or constants. We use the
-// !== operator so that Xs must also match exactly. Display using string.
+// !== operator so that Xs must also match exactly. Display as string.
 
 `define ECE2300_CHECK_EQ_STR( __dut, __ref )                            \
-  if ( __ref !== __dut ) begin                                          \
-    if ( t.n != 0 ) begin                                               \
-      $display( "" );                                                   \
-      $display( "ERROR: Value on output port %s is incorrect on cycle %0d", \
-                "__dut", t.cycles );                                    \
-      $display( " - actual value   : %-s", __dut );                     \
-      $display( " - expected value : %-s", __ref );                     \
+  if ( __ref !== 'z ) begin                                             \
+    if ( __ref !== __dut ) begin                                        \
+      if ( t.n != 0 ) begin                                             \
+        $display( "" );                                                 \
+        $display( "ERROR: Value on output port %s is incorrect on cycle %0d", \
+                  "__dut", t.cycles );                                  \
+        $display( " - actual value   : %-s", __dut );                   \
+        $display( " - expected value : %-s", __ref );                   \
+      end                                                               \
+      t.failed = 1;                                                     \
     end                                                                 \
-    t.failed = 1;                                                       \
-  end                                                                   \
-  else begin                                                            \
-    t.passed = 1;                                                       \
+    else begin                                                          \
+      t.passed = 1;                                                     \
+    end                                                                 \
   end                                                                   \
   if (1)
 

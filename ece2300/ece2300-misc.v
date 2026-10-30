@@ -47,7 +47,7 @@
 `endif
 
 //------------------------------------------------------------------------
-// ECE2300_UNDRIVEN
+// ECE2300_FLOATING
 //------------------------------------------------------------------------
 // We use the $bits system task to get the bitwidth of the signal so we
 // can use the repeat operator to create a literal with all Zs. Unlike
@@ -57,86 +57,8 @@
 // does not have a trailing semicolon. The semicolon after the actual
 // macro call will turn into the semicolon at the end of the assign.
 
-`define ECE2300_UNDRIVEN( signal_ ) \
+`define ECE2300_FLOATING( signal_ ) \
   assign signal_ = {$bits(signal_){1'bz}}
-
-//------------------------------------------------------------------------
-// ECE2300_XPROP
-//------------------------------------------------------------------------
-// This macro enables forcing a signal to be X to avoid X-optimism in
-// combinational logic. The following is an example of how to force the
-// signal a to be X if b contains any Xs:
-//
-//  `ECE2300_XPROP( a, $isunknown(b) );
-//
-// You can use logical expressions to specify more complicated situations
-// where we want to force a signal to be X. And you can also use
-// ECE2300_XPROP multiple times for the same signal; if any of the
-// logical expressions are true then the signal will be forced to X. The
-// following is an example of how to force the signal to be X if b
-// contains any Xs or if b is zero and c contains any Xs.
-//
-//  `ECE2300_XPROP( a, $isunknown(b) );
-//  `ECE2300_XPROP( a, (b == 0) || $isunknown(c) );
-//
-// Note that you _must_ use ECE2300_XPROP _inside_ an always_comb block.
-// If you use it outside an always_comb block you will get a strange
-// error from Verilator like this on the line where you use
-// ECE2300_XPROP:
-//
-//  syntax error, unexpected '=', expecting IDENTIFIER or '(' or randomize
-//
-// You should not use ECE2300_XPROP in an always_ff block.
-//
-
-`ifndef ALTERA_RESERVED_QIS
-`define ECE2300_XPROP( signal_, expression_ ) \
-  if ( expression_ ) \
-    signal_ = 'x; \
-  if (0)
-`else
-`define ECE2300_XPROP( signal_, expression_ ) \
-  if (0)
-`endif
-
-//------------------------------------------------------------------------
-// ECE2300_SEQ_XPROP
-//------------------------------------------------------------------------
-// This macro enables forcing a signal to be X to avoid X-optimism in
-// sequential logic. The following is an example of how to force the
-// signal a to be X if b contains any Xs:
-//
-//  `ECE2300_SEQ_XPROP( a, $isunknown(b) );
-//
-// You can use logical expressions to specify more complicated situations
-// where we want to force a signal to be X. And you can also use
-// ECE2300_SEQ_XPROP multiple times for the same signal; if any of the
-// logical expressions are true then the signal will be forced to X. The
-// following is an example of how to force the signal to be X if b
-// contains any Xs or if b is zero and c contains any Xs.
-//
-//  `ECE2300_SEQ_XPROP( a, $isunknown(b) );
-//  `ECE2300_SEQ_XPROP( a, (b == 0) || $isunknown(c) );
-//
-// Note that you _must_ use ECE2300_SEQ_XPROP _inside_ an always_ff
-// block. If you use it outside an always_ff block you will get a strange
-// error from Verilator like this on the line where you use
-// ECE2300_SEQ_XPROP:
-//
-//  syntax error, unexpected <=, expecting IDENTIFIER or '(' or randomize
-//
-// You should not use ECE2300_SEQ_XPROP in an always_comb block.
-//
-
-`ifndef ALTERA_RESERVED_QIS
-`define ECE2300_SEQ_XPROP( signal_, expression_ ) \
-  if ( expression_ ) \
-    signal_ <= 'x; \
-  if (0)
-`else
-`define ECE2300_SEQ_XPROP( signal_, expression_ ) \
-  if (0)
-`endif
 
 `endif /* ECE2300_MISC */
 

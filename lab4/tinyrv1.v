@@ -561,13 +561,13 @@ module TinyRV1();
 
     casez ( inst )
       `TINYRV1_INST_ADD   : $sformat( disasm_, "add  x%-0d, x%-0d, x%-0d", rd, rs1, rs2 );
-      `TINYRV1_INST_ADDI  : $sformat( disasm_, "addi x%-0d, x%-0d, 0x%x",  rd, rs1, disasm_imm_i(inst) );
+      `TINYRV1_INST_ADDI  : $sformat( disasm_, "addi x%-0d, x%-0d, %-5d",  rd, rs1, disasm_imm_i(inst) );
       `TINYRV1_INST_MUL   : $sformat( disasm_, "mul  x%-0d, x%-0d, x%-0d", rd, rs1, rs2 );
-      `TINYRV1_INST_LW    : $sformat( disasm_, "lw   x%-0d, 0x%x(x%-0d)",  rd, disasm_imm_i(inst), rs1 );
-      `TINYRV1_INST_SW    : $sformat( disasm_, "sw   x%-0d, 0x%x(x%-0d)",  rs2, disasm_imm_s(inst), rs1 );
-      `TINYRV1_INST_JAL   : $sformat( disasm_, "jal  x%-0d, 0x%x",         rd, 20'(disasm_imm_j(addr,inst)) );
+      `TINYRV1_INST_LW    : $sformat( disasm_, "lw   x%-0d, %5d(x%-0d)",   rd, disasm_imm_i(inst), rs1 );
+      `TINYRV1_INST_SW    : $sformat( disasm_, "sw   x%-0d, %5d(x%-0d)",   rs2, disasm_imm_s(inst), rs1 );
+      `TINYRV1_INST_JAL   : $sformat( disasm_, "jal  x%-0d, %-5d",         rd, 20'(disasm_imm_j(addr,inst)) );
       `TINYRV1_INST_JR    : $sformat( disasm_, "jr   x%-0d",               rs1 );
-      `TINYRV1_INST_BNE   : $sformat( disasm_, "bne  x%-0d, x%-0d, 0x%x",  rs1, rs2, 20'(disasm_imm_b(addr,inst)) );
+      `TINYRV1_INST_BNE   : $sformat( disasm_, "bne  x%-0d, x%-0d, %-5d",  rs1, rs2, 20'(disasm_imm_b(addr,inst)) );
       default             : $sformat( disasm_, "illegal inst" );
     endcase
 

@@ -13,7 +13,7 @@ module ProcFL
   input  logic        clk,
   input  logic        rst,
 
-  // MMU External I/O
+  // Memory Bus External I/O
 
   input  logic [31:0] in0,
   input  logic [31:0] in1,
@@ -105,6 +105,7 @@ module ProcFL
       out0       <= '0;
       out1       <= '0;
       out2       <= '0;
+      out3       <= '0;
       trace_val  <= 1'b0;
       trace_addr <= 'x;
       trace_inst <= 'x;
@@ -169,15 +170,15 @@ module ProcFL
             integer addr;
             addr = (R[rs1] + imm_i(ir));
 
-            if ( addr < 32'h7e0 ) begin
+            if ( addr < 32'h200 ) begin
               R[rd] = M[ addr[8:2] ];
             end
             else begin
               case ( addr )
-                32'h7e0 : R[rd] = in0;
-                32'h7e4 : R[rd] = in1;
-                32'h7e8 : R[rd] = in2;
-                32'h7ec : R[rd] = in3;
+                32'h200 : R[rd] = in0;
+                32'h204 : R[rd] = in1;
+                32'h208 : R[rd] = in2;
+                32'h20c : R[rd] = in3;
                 default: ;
               endcase
             end
@@ -192,15 +193,15 @@ module ProcFL
             integer addr;
             addr = R[rs1] + imm_s(ir);
 
-            if ( addr < 32'h7e0 ) begin
+            if ( addr < 32'h200 ) begin
               M[ addr[8:2] ] =  R[rs2];
             end
             else begin
               case ( addr )
-                32'h7f0 : out0 <= R[rs2];
-                32'h7f4 : out1 <= R[rs2];
-                32'h7f8 : out2 <= R[rs2];
-                32'h7fc : out3 <= R[rs2];
+                32'h210 : out0 <= R[rs2];
+                32'h214 : out1 <= R[rs2];
+                32'h218 : out2 <= R[rs2];
+                32'h21c : out3 <= R[rs2];
                 default: ;
               endcase
             end

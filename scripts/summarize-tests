@@ -50,7 +50,6 @@ def process_log( filename ):
 
   passed = None
   failed = None
-  timeout = False
 
   with open(filename) as f:
     for line in f:
@@ -61,11 +60,7 @@ def process_log( filename ):
       elif line.startswith("num_test_cases_failed"):
         failed = int(re.search(r"=\s*(\d+)", line).group(1))
 
-      elif line.startswith("TIMEOUT"):
-        print("timeout")
-        exit()
-
-  return passed, failed, timeout
+  return passed, failed
 
 #-------------------------------------------------------------------------
 # Main
@@ -96,6 +91,10 @@ def main():
             if line.strip() and \
                not line.startswith("num_test_cases_passed") and \
                not line.startswith("num_test_cases_failed") and \
+               not line.startswith("You can zoom") and \
+               not line.startswith("that test case") and \
+               not line.startswith("named FooBar-test") and \
+               not line.startswith(" % ./FooBar-test") and \
                not "finish called at" in line:
               print(line,end="")
 
@@ -121,11 +120,11 @@ def main():
       print(f"{testname:<40} {status} (log file not exist)")
       continue
 
-    passed, failed, timeout = process_log(filename)
+    passed, failed = process_log(filename)
     if passed is None or failed is None:
       any_failed = True
       status = f"\033[31mFAILED\033[0m"  # red
-      print(f"{testname:<40} {status} (log file invalid)")
+      print(f"{testname:<40} {status} ( ?/ ? test cases passed)")
       continue
 
     if failed == 0 and passed > 0:
@@ -144,6 +143,17 @@ def main():
   # does not get rid of this blank line
   print("\u200B")
 
+  if not opts.verbose:
+    print("You can zoom in to see why a given test bench is failing by directly")
+    print("running that test bench. For example, if the test bench named FooBar-test")
+    print("is failing you can zoom in like this:")
+    print("")
+    print(" % ./FooBar-test")
+
+    # Need to use a special zero-width space so that GitHub actions
+    # does not get rid of this blank line
+    print("\u200B")
+
   # Exit with a non-zero exit status on any failures so GitHub actions
 
   if opts.exit_status and any_failed:
@@ -151,4 +161,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

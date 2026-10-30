@@ -730,6 +730,11 @@ def assemble( asm_code ):
       found_data_section = True
       break
 
+    elif line.startswith(".word"):
+      (cmd,sep,value) = line.partition(' ')
+      text_bytes.extend(struct.pack("<I",int(value,0)))
+      addr += 4
+
     else:
       if ':' not in line:
         inst_str = line
